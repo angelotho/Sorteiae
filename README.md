@@ -83,8 +83,8 @@ Não há backend nem banco de dados: a persistência usa apenas o `localStorage`
 **Pré-requisito:** [Node.js](https://nodejs.org) 20.19 ou superior.
 
 ```bash
-git clone https://github.com/angelotho/sorteiae.git
-cd sorteiae
+git clone https://github.com/angelotho/Sorteiae.git
+cd Sorteiae
 npm install
 npm run dev
 ```

@@ -29,7 +29,7 @@ export function HistorySheet() {
           {history.length > 0 && <span className="text-xs tabular-nums text-muted-foreground">{history.length}</span>}
         </Button>
       </SheetTrigger>
-      <SheetContent side={desktop ? 'right' : 'bottom'} className={cn('gap-0 p-0', desktop ? 'w-full sm:max-w-md' : 'h-[85dvh] rounded-t-3xl')}>
+      <SheetContent side={desktop ? 'right' : 'bottom'} className={cn('gap-0 p-0', desktop ? 'data-[side=right]:w-full data-[side=right]:sm:max-w-[580px]' : 'h-[85dvh] rounded-t-3xl')}>
         <SheetHeader className="gap-1 border-b px-5 pt-5 pb-4">
           <SheetTitle className="text-lg font-semibold tracking-tight">Histórico</SheetTitle>
           <SheetDescription>{history.length === 0 ? 'Nenhum sorteio registrado.' : plural(history.length, 'sorteio registrado', 'sorteios registrados')}</SheetDescription>

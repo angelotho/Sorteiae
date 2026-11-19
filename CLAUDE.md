@@ -17,7 +17,7 @@ Aplicação web brasileira de sorteios online — sorteio por **nomes** e por **
 - Animação: CSS + `requestAnimationFrame` guiado por timestamp. Sem biblioteca de motion.
 - Persistência / backend: **somente `localStorage`** (chave `sorteiae:estado:v1`; tema em `sorteiae:tema`). Sem backend.
 - Alias de import: `@/` → `src/`.
-- Hospedagem: **Vercel** (plano Hobby), projeto `sorteiae` ligado a `angelotho/sorteiae`, deploy automático da `main`. Produção: https://sorteiae.vercel.app
+- Hospedagem: **Vercel** (plano Hobby), projeto `sorteiae` ligado a `angelotho/Sorteiae`, deploy automático da `main`. Produção: https://sorteiae.vercel.app
 
 Não instale bibliotecas que não estejam listadas aqui ou que não tenham sido aprovadas pelo usuário. Antes de propor uma, use a skill `pick-ui-library`.
 

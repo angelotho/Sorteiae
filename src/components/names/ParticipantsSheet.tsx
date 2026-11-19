@@ -1,5 +1,5 @@
-import { memo, useMemo, useState } from 'react';
-import { ArrowDownAZ, ArrowUpZA, Check, Ellipsis, Pencil, Search, Shuffle, Trash2, Users, X } from 'lucide-react';
+import { memo, useMemo, useRef, useState } from 'react';
+import { ArrowDownAZ, ArrowUpZA, Check, Ellipsis, Pencil, Plus, Search, Shuffle, Trash2, Users, X } from 'lucide-react';
 import type { Participant } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,10 +16,11 @@ import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useApp } from '@/state/AppState';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { notify } from '@/lib/notify';
-import { cleanName, nameKey, sortParticipants } from '@/lib/names';
+import { cleanName, MAX_NAME_LENGTH, nameKey, parseNameList, sortParticipants } from '@/lib/names';
 import { shuffled } from '@/lib/random';
 import { formatNumber, plural } from '@/lib/format';
 import { cn } from '@/lib/utils';
+import { useAddNames } from './useAddNames';
 
 const PAGE = 200;
 
@@ -42,6 +43,7 @@ export function ParticipantsSheet({ open, onOpenChange, duplicateIds }: Props) {
   const [limit, setLimit] = useState(PAGE);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
+  const [adding, setAdding] = useState(false);
 
   const filtered = useMemo(() => {
     const q = nameKey(query);
@@ -58,10 +60,16 @@ export function ParticipantsSheet({ open, onOpenChange, duplicateIds }: Props) {
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) setAdding(false);
+        onOpenChange(next);
+      }}
+    >
       <SheetContent
         side={desktop ? 'right' : 'bottom'}
-        className={cn('gap-0 p-0', desktop ? 'w-full sm:max-w-md' : 'h-[88dvh] rounded-t-3xl')}
+        className={cn('gap-0 p-0', desktop ? 'data-[side=right]:w-full data-[side=right]:sm:max-w-[580px]' : 'h-[88dvh] rounded-t-3xl')}
       >
         <SheetHeader className="gap-1 px-5 pt-5 pb-4">
           <SheetTitle className="text-lg font-semibold tracking-tight">Participantes</SheetTitle>
@@ -95,6 +103,9 @@ export function ParticipantsSheet({ open, onOpenChange, duplicateIds }: Props) {
                 onKeyDown={(e) => e.key === 'Escape' && query && (e.stopPropagation(), setQuery(''))}
               />
             </div>
+            <IconAction label="Novo participante" disabled={locked} active={adding} controls="novo-participante" onClick={() => setAdding((v) => !v)}>
+              <Plus />
+            </IconAction>
             <IconAction label="Embaralhar" disabled={few} onClick={() => reorder(shuffled(participants), 'Lista embaralhada. A ordem não muda as chances de ninguém.')}>
               <Shuffle />
             </IconAction>
@@ -125,9 +136,22 @@ export function ParticipantsSheet({ open, onOpenChange, duplicateIds }: Props) {
           </div>
         )}
 
+        {adding && !locked && <AddParticipant onClose={() => setAdding(false)} bordered={participants.length === 0} />}
+
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-2">
           {participants.length === 0 ? (
-            <Empty title="Nenhum participante" text="Feche este painel e digite ou cole os nomes no campo principal." />
+            <Empty
+              title="Nenhum participante"
+              text="Adicione nomes aqui, um de cada vez, ou cole uma lista no campo principal."
+              action={
+                !adding && (
+                  <Button variant="outline" size="sm" className="rounded-full" disabled={locked} onClick={() => setAdding(true)}>
+                    <Plus />
+                    Novo participante
+                  </Button>
+                )
+              }
+            />
           ) : filtered.length === 0 ? (
             <Empty title="Nada encontrado" text={`Nenhum nome contém “${query}”.`} action={<Button variant="outline" size="sm" onClick={() => setQuery('')}>Limpar busca</Button>} />
           ) : (
@@ -174,16 +198,90 @@ export function ParticipantsSheet({ open, onOpenChange, duplicateIds }: Props) {
   );
 }
 
-function IconAction({ label, children, ...props }: { label: string; children: React.ReactNode; disabled?: boolean; onClick: () => void }) {
+interface IconActionProps {
+  label: string;
+  children: React.ReactNode;
+  disabled?: boolean;
+  /** Botão que abre/fecha uma área: informa o estado e o id da área controlada. */
+  active?: boolean;
+  controls?: string;
+  onClick: () => void;
+}
+
+function IconAction({ label, children, active, controls, ...props }: IconActionProps) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Button variant="ghost" size="icon" className="size-9 shrink-0 rounded-full" aria-label={label} {...props}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn('size-9 shrink-0 rounded-full', active && 'bg-muted text-foreground')}
+          aria-label={label}
+          aria-expanded={active}
+          aria-controls={active ? controls : undefined}
+          {...props}
+        >
           {children}
         </Button>
       </TooltipTrigger>
       <TooltipContent>{label}</TooltipContent>
     </Tooltip>
+  );
+}
+
+function AddParticipant({ onClose, bordered }: { onClose: () => void; bordered: boolean }) {
+  const addNames = useAddNames();
+  const [name, setName] = useState('');
+  const ref = useRef<HTMLInputElement>(null);
+  const names = parseNameList(name);
+
+  const submit = () => {
+    if (names.length === 0) return ref.current?.focus();
+    if (!addNames(names)) return;
+    if (names.length === 1) notify(`${names[0]} entrou na lista.`, 'success');
+    setName('');
+    ref.current?.focus();
+  };
+
+  return (
+    <form
+      id="novo-participante"
+      className={cn('flex items-center gap-1.5 border-b px-5 py-3 animate-rise', bordered && 'border-t')}
+      onSubmit={(e) => {
+        e.preventDefault();
+        submit();
+      }}
+    >
+      <label htmlFor="novo-participante-nome" className="sr-only">
+        Nome do novo participante
+      </label>
+      <Input
+        id="novo-participante-nome"
+        ref={ref}
+        value={name}
+        maxLength={MAX_NAME_LENGTH}
+        autoFocus
+        autoComplete="off"
+        spellCheck={false}
+        enterKeyHint="done"
+        placeholder="Nome do participante"
+        className="h-9 min-w-0 flex-1 rounded-full px-3.5 text-base md:text-sm"
+        onChange={(e) => setName(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            e.stopPropagation();
+            onClose();
+          }
+        }}
+      />
+      <Button type="submit" size="sm" className="h-9 shrink-0 rounded-full px-3.5" disabled={names.length === 0}>
+        Adicionar
+      </Button>
+      <Button type="button" variant="ghost" size="icon" className="size-9 shrink-0 rounded-full text-muted-foreground" aria-label="Fechar campo de novo participante" onClick={onClose}>
+        <X />
+      </Button>
+    </form>
   );
 }
 

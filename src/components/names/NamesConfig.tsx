@@ -7,12 +7,12 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useApp } from '@/state/AppState';
-import { notify } from '@/lib/notify';
 import { findDuplicates, MAX_PARTICIPANTS, parseNameList, SAMPLE_NAMES } from '@/lib/names';
 import { eligibleParticipants } from '@/lib/validation';
 import { formatNumber, plural } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { ParticipantsSheet } from './ParticipantsSheet';
+import { useAddNames } from './useAddNames';
 
 function initials(name: string): string {
   const parts = name.split(' ').filter(Boolean);
@@ -28,6 +28,7 @@ export function NamesConfig() {
   const [text, setText] = useState('');
   const [listOpen, setListOpen] = useState(false);
   const ref = useRef<HTMLTextAreaElement>(null);
+  const addNames = useAddNames();
   const pendingCount = useMemo(() => parseNameList(text).length, [text]);
   const duplicates = useMemo(() => findDuplicates(participants), [participants]);
   const showDuplicates = duplicates.groups > 0 && duplicates.signature !== state.keptDuplicates;
@@ -37,11 +38,7 @@ export function NamesConfig() {
   const submit = () => {
     const names = parseNameList(text);
     if (names.length === 0) return ref.current?.focus();
-    const room = MAX_PARTICIPANTS - participants.length;
-    if (room <= 0) return notify(`A lista já tem o máximo de ${formatNumber(MAX_PARTICIPANTS)} participantes.`, 'error');
-    dispatch({ type: 'addNames', names });
-    if (names.length > room) notify(`Só ${formatNumber(room)} nomes couberam: o limite é ${formatNumber(MAX_PARTICIPANTS)}.`, 'error');
-    else if (names.length > 1) notify(`${formatNumber(names.length)} participantes adicionados.`, 'success');
+    if (!addNames(names)) return;
     setText('');
     ref.current?.focus();
   };
