@@ -8,8 +8,11 @@
 <p><strong>Sorteios online de nomes e números, justos de verdade.</strong><br>
 Sem cadastro, sem servidor, com aleatoriedade criptográfica.</p>
 
+<p><a href="https://sorteiae.vercel.app/"><strong>Acessar o Sorteiaê →</strong></a></p>
+
 <p>
-  <img alt="Versão" src="https://img.shields.io/badge/vers%C3%A3o-1.0.0-2A30E6">
+  <a href="https://sorteiae.vercel.app/"><img alt="Site no ar" src="https://img.shields.io/badge/site-sorteiae.vercel.app-000000?logo=vercel&logoColor=white"></a>
+  <img alt="Versão" src="https://img.shields.io/badge/vers%C3%A3o-1.0.1-2A30E6">
   <img alt="React 19" src="https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white">
   <img alt="Vite" src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white">
@@ -21,6 +24,8 @@ Sem cadastro, sem servidor, com aleatoriedade criptográfica.</p>
 ---
 
 ## Sobre
+
+> 🔗 **Em produção:** [sorteiae.vercel.app](https://sorteiae.vercel.app/)
 
 O **Sorteiaê** é uma aplicação web brasileira para sortear nomes ou números em segundos. Tudo roda no navegador: os participantes, os resultados e o histórico nunca saem do aparelho de quem usa.
 
@@ -95,6 +100,8 @@ Acesse `http://localhost:5173`. Para testar no celular na mesma rede, rode `npm 
 | `npm run preview` | Serve localmente a versão de produção |
 
 ## Publicação
+
+A versão oficial está hospedada na [Vercel](https://vercel.com) em **[sorteiae.vercel.app](https://sorteiae.vercel.app/)**, com publicação automática a cada push na branch `main`.
 
 O build gera um site 100% estático em `dist/`, com caminhos relativos, e pode ser publicado em qualquer hospedagem estática (Vercel, Netlify, Cloudflare Pages, GitHub Pages etc.). As páginas internas usam rotas por hash (`#/privacidade`, `#/termos`), então não é preciso configurar redirecionamentos no servidor.
 
