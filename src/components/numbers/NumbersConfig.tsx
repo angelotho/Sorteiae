@@ -32,7 +32,7 @@ export function NumbersConfig() {
   const drawnCount = cfg.allowRepeat ? 0 : new Set(state.numbersRound.drawn).size;
 
   return (
-    <div className="grid gap-3">
+    <div className="grid grid-cols-1 gap-3">
       <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-2.5 rounded-2xl border border-border/80 bg-background px-2.5 py-5 text-base min-[380px]:text-lg sm:gap-x-3 sm:px-3 sm:py-6 font-medium tracking-tight sm:text-xl">
         <span>Sortear</span>
         <NumberField id="num-qtd" label="Quantidade" value={cfg.count} invalid={!!errors.count} disabled={locked} width="w-14 sm:w-16" onChange={(v) => set({ count: v })} />

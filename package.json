@@ -1,7 +1,7 @@
 {
   "name": "sorteiae",
   "private": true,
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Sorteios online de nomes e números com aleatoriedade criptográfica. Sem cadastro.",
   "type": "module",
   "scripts": {

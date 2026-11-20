@@ -28,6 +28,7 @@ Não instale bibliotecas que não estejam listadas aqui ou que não tenham sido 
 - `src/lib/validation.ts`, `names.ts`, `format.ts` — regras puras (validação, duplicados, formatação pt-BR).
 - `src/state/` — reducer único (`reducer.ts`), persistência validada campo a campo (`storage.ts`), contexto (`AppState.tsx`).
 - `src/hooks/useDrawClock.ts` — relógio do sorteio por `Date.now()` + Page Visibility; a conclusão nunca depende de quadros renderizados.
+- `src/hooks/useVisualViewport.ts` — área visível real (VisualViewport API), usada para a Sheet de baixo acompanhar o teclado virtual no celular.
 - `src/components/` — interface: `names/` (campo + lista em Sheet), `numbers/` (frase com campos), `stage/` (palco, carrossel, resultado), `HistorySheet`, `Splash` (abertura), `legal/` (Privacidade e Termos), `ui/` (shadcn).
 - Rotas por hash (`src/hooks/useRoute.ts`): `#/` início, `#/privacidade`, `#/termos`. Sem biblioteca de rotas.
 - `src/lib/legal.ts` — data das políticas. O Sorteiaê **não tem canal de contato** (decisão do usuário), e as políticas não citam contato. Se o app passar a enviar dados a servidores, usar cookies ou analytics, as políticas precisam ser revistas.
@@ -37,7 +38,7 @@ Regras de produto já decididas:
 - Nomes: vários vencedores no mesmo sorteio são sempre distintos; "Não repetir quem já saiu" (sem reposição) exclui vencedores até a próxima rodada.
 - Números: "Permitir repetição" vale dentro do sorteio e entre sorteios da rodada. Limites: ±1 trilhão, até 1.000 números por sorteio.
 - Alterar intervalo ou regra de repetição inicia nova rodada automaticamente.
-- Lista: até 20.000 participantes, 120 caracteres por nome; duplicados comparados sem diferenciar maiúsculas e acentos.
+- Lista: até 20.000 participantes, 120 caracteres por nome; duplicados comparados sem diferenciar maiúsculas e acentos. Nomes podem ser separados por quebra de linha ou vírgula (os dois combinados); por isso um nome nunca contém vírgula ao ser adicionado.
 - Histórico: últimos 200 sorteios.
 
 Princípios gerais:
@@ -87,6 +88,7 @@ Antes de começar uma tarefa, verifique se alguma skill abaixo se aplica. Se sim
 | **break-ui**                    | `.claude/skills/break-ui/SKILL.md`                    | Testar tela com dados extremos: nomes longos, listas vazias ou enormes, intervalos numéricos gigantes, emoji, estados de erro e carregamento.                                     |
 | **learn-taste**                 | `.claude/skills/learn-taste/SKILL.md`                 | Ao fim de uma sessão com correções de design do usuário: transformar as preferências em regras no `DESIGN.md`.                                                                   |
 | **pick-ui-library**             | `.claude/skills/pick-ui-library/SKILL.md`             | Antes de construir componente complexo (modal, toast, drawer, animação de números etc.): escolher biblioteca consolidada em vez de fazer na mão.                                  |
+| **impeccable**                  | `.claude/skills/impeccable/SKILL.md`                  | Projetar, redesenhar, criticar, auditar, polir ou animar frontend e design system. Subcomandos: `shape`, `audit`, `critique`, `polish`, `animate`, `typeset`, `colorize`, `layout`, `harden` etc. O launcher (`scripts/impeccable`) baixa um binário verificado por checksum na primeira execução. |
 
 ### Combinações comuns
 
@@ -95,6 +97,7 @@ Antes de começar uma tarefa, verifique se alguma skill abaixo se aplica. Se sim
 - Tela de sorteio / revelação do resultado → `frontend-design` + `make-interfaces-feel-better` (motion) + `break-ui` (listas e intervalos extremos)
 - Lista de participantes com busca → `search-ux` + `make-interfaces-feel-better`
 - Revisão de tela pronta → `web-design-guidelines`
+- Crítica de design ou auditoria visual mais profunda → `impeccable` (`critique` / `audit`), depois `impeccable polish` para o acabamento
 - Funcionalidade grande → `product-owner` primeiro (especificar), implementar só após aprovação do usuário
 
 ## Instalação de skills

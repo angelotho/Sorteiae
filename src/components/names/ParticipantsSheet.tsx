@@ -1,4 +1,4 @@
-import { memo, useMemo, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { ArrowDownAZ, ArrowUpZA, Check, Ellipsis, Pencil, Plus, Search, Shuffle, Trash2, Users, X } from 'lucide-react';
 import type { Participant } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -15,8 +15,9 @@ import {
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useApp } from '@/state/AppState';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useVisualViewport } from '@/hooks/useVisualViewport';
 import { notify } from '@/lib/notify';
-import { cleanName, MAX_NAME_LENGTH, nameKey, parseNameList, sortParticipants } from '@/lib/names';
+import { cleanName, nameKey, parseNameList, sortParticipants } from '@/lib/names';
 import { shuffled } from '@/lib/random';
 import { formatNumber, plural } from '@/lib/format';
 import { cn } from '@/lib/utils';
@@ -44,6 +45,20 @@ export function ParticipantsSheet({ open, onOpenChange, duplicateIds }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
   const [adding, setAdding] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  // No celular a folha acompanha a área visível: com o teclado aberto ela encolhe e sobe,
+  // mantendo cabeçalho e busca à vista e a lista rolando por dentro.
+  const area = useVisualViewport(open && !desktop);
+  const mobileStyle: CSSProperties | undefined = area
+    ? { bottom: area.inset, height: `min(88dvh, ${area.height - 8}px)` }
+    : undefined;
+
+  // Depois do ajuste, o campo em foco (busca, novo nome ou edição) continua visível.
+  useEffect(() => {
+    const el = document.activeElement;
+    if (area && el instanceof HTMLElement && contentRef.current?.contains(el)) el.scrollIntoView({ block: 'nearest' });
+  }, [area]);
 
   const filtered = useMemo(() => {
     const q = nameKey(query);
@@ -58,6 +73,11 @@ export function ParticipantsSheet({ open, onOpenChange, duplicateIds }: Props) {
     dispatch({ type: 'reorderParticipants', participants: next });
     notify(message);
   };
+  const orderActions = [
+    { label: 'Embaralhar', icon: <Shuffle />, run: () => reorder(shuffled(participants), 'Lista embaralhada. A ordem não muda as chances de ninguém.') },
+    { label: 'Ordem de A a Z', icon: <ArrowDownAZ />, run: () => reorder(sortParticipants(participants, 'asc'), 'Lista em ordem de A a Z.') },
+    { label: 'Ordem de Z a A', icon: <ArrowUpZA />, run: () => reorder(sortParticipants(participants, 'desc'), 'Lista em ordem de Z a A.') },
+  ];
 
   return (
     <Sheet
@@ -68,8 +88,11 @@ export function ParticipantsSheet({ open, onOpenChange, duplicateIds }: Props) {
       }}
     >
       <SheetContent
+        ref={contentRef}
         side={desktop ? 'right' : 'bottom'}
-        className={cn('gap-0 p-0', desktop ? 'data-[side=right]:w-full data-[side=right]:sm:max-w-[580px]' : 'h-[88dvh] rounded-t-3xl')}
+        style={mobileStyle}
+        // A variante data-[side=bottom] é necessária para vencer o h-auto do componente base.
+        className={cn('gap-0 p-0', desktop ? 'data-[side=right]:w-full data-[side=right]:sm:max-w-[580px]' : 'rounded-t-3xl data-[side=bottom]:h-[88dvh]')}
       >
         <SheetHeader className="gap-1 px-5 pt-5 pb-4">
           <SheetTitle className="text-lg font-semibold tracking-tight">Participantes</SheetTitle>
@@ -106,15 +129,12 @@ export function ParticipantsSheet({ open, onOpenChange, duplicateIds }: Props) {
             <IconAction label="Novo participante" disabled={locked} active={adding} controls="novo-participante" onClick={() => setAdding((v) => !v)}>
               <Plus />
             </IconAction>
-            <IconAction label="Embaralhar" disabled={few} onClick={() => reorder(shuffled(participants), 'Lista embaralhada. A ordem não muda as chances de ninguém.')}>
-              <Shuffle />
-            </IconAction>
-            <IconAction label="Ordem de A a Z" disabled={few} onClick={() => reorder(sortParticipants(participants, 'asc'), 'Lista em ordem de A a Z.')}>
-              <ArrowDownAZ />
-            </IconAction>
-            <IconAction label="Ordem de Z a A" disabled={few} onClick={() => reorder(sortParticipants(participants, 'desc'), 'Lista em ordem de Z a A.')}>
-              <ArrowUpZA />
-            </IconAction>
+            {desktop &&
+              orderActions.map(({ label, icon, run }) => (
+                <IconAction key={label} label={label} disabled={few} onClick={run}>
+                  {icon}
+                </IconAction>
+              ))}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="size-9 rounded-full" aria-label="Mais ações" disabled={locked}>
@@ -122,6 +142,18 @@ export function ParticipantsSheet({ open, onOpenChange, duplicateIds }: Props) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-52">
+                {/* No celular a ordenação mora aqui, deixando a busca com espaço para digitar. */}
+                {!desktop && (
+                  <>
+                    {orderActions.map(({ label, icon, run }) => (
+                      <DropdownMenuItem key={label} disabled={few} onSelect={run}>
+                        {icon}
+                        {label}
+                      </DropdownMenuItem>
+                    ))}
+                    <DropdownMenuSeparator />
+                  </>
+                )}
                 <DropdownMenuItem disabled={duplicateIds.size === 0} onSelect={() => dispatch({ type: 'removeDuplicates' })}>
                   <Users />
                   Remover repetidos
@@ -259,7 +291,6 @@ function AddParticipant({ onClose, bordered }: { onClose: () => void; bordered: 
         id="novo-participante-nome"
         ref={ref}
         value={name}
-        maxLength={MAX_NAME_LENGTH}
         autoFocus
         autoComplete="off"
         spellCheck={false}

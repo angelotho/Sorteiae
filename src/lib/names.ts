@@ -12,10 +12,13 @@ export function cleanName(raw: string): string {
     .slice(0, MAX_NAME_LENGTH);
 }
 
-/** Uma entrada por linha. Linhas vazias são ignoradas. */
+/**
+ * Separa nomes por quebra de linha ou vírgula (os dois podem ser combinados).
+ * Entradas vazias, de vírgulas seguidas ou nas pontas, são ignoradas.
+ */
 export function parseNameList(text: string): string[] {
   return text
-    .split(/\r?\n/)
+    .split(/[\r\n,]+/)
     .map(cleanName)
     .filter((name) => name.length > 0);
 }

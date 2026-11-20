@@ -44,7 +44,8 @@ export function NamesConfig() {
   };
 
   return (
-    <div className="grid gap-3">
+    // grid-cols-1 = minmax(0, 1fr): a coluna nunca passa da largura do cartão, mesmo com textos longos.
+    <div className="grid grid-cols-1 gap-3">
       <form
         className="relative"
         onSubmit={(e) => {
@@ -53,7 +54,7 @@ export function NamesConfig() {
         }}
       >
         <label htmlFor="novos-nomes" className="sr-only">
-          Nomes dos participantes, um por linha
+          Nomes dos participantes, separados por linha ou vírgula
         </label>
         <Textarea
           ref={ref}
@@ -67,7 +68,7 @@ export function NamesConfig() {
               submit();
             }
           }}
-          placeholder={'Digite um nome ou cole uma lista\nUm nome por linha'}
+          placeholder={'Escreva os nomes ou cole uma lista\nEx.: Ana, Bruno, Carla'}
           autoComplete="off"
           spellCheck={false}
           className="max-h-[40vh] min-h-24 resize-none rounded-2xl border-border/80 bg-background px-3.5 pt-3 pb-12 sm:min-h-28 sm:px-4 sm:pt-3.5 sm:pb-14 text-base leading-relaxed shadow-none md:text-[15px]"
@@ -83,7 +84,7 @@ export function NamesConfig() {
         </div>
       </form>
 
-      <div className="flex min-h-10 items-center justify-between gap-2 px-0.5">
+      <div className="@container flex min-h-10 min-w-0 items-center justify-between gap-2 px-0.5">
         {participants.length === 0 ? (
           <p className="px-1 text-sm text-muted-foreground">
             Nenhum participante.{' '}
@@ -98,11 +99,12 @@ export function NamesConfig() {
           </p>
         ) : (
           <Button variant="ghost" className="h-10 min-w-0 shrink gap-2 rounded-full pr-1.5 pl-1 sm:-ml-1 sm:gap-2.5 sm:pr-2 sm:pl-1.5" onClick={() => setListOpen(true)}>
-            <span className="flex -space-x-1.5" aria-hidden>
+            {/* Avatares cedem espaço ao texto conforme a largura real da linha. */}
+            <span className="flex shrink-0 -space-x-1.5 @max-[18rem]:hidden" aria-hidden>
               {participants.slice(0, 3).map((p, i) => (
                 <span
                   key={p.id}
-                  className={cn('grid size-7 place-items-center rounded-full bg-brand-soft text-[0.625rem] font-semibold text-brand ring-2 ring-card', i > 1 && 'max-[379px]:hidden')}
+                  className={cn('grid size-7 place-items-center rounded-full bg-brand-soft text-[0.625rem] font-semibold text-brand ring-2 ring-card', i > 1 && '@max-[24rem]:hidden')}
                 >
                   {initials(p.name)}
                 </span>
