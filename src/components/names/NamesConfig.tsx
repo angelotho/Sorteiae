@@ -1,11 +1,15 @@
 import { useMemo, useRef, useState } from 'react';
-import { ChevronRight, Minus, Plus, SlidersHorizontal, TriangleAlert } from 'lucide-react';
+import { ChevronRight, Minus, Plus, Shuffle, SlidersHorizontal, Trash2, TriangleAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { notify } from '@/lib/notify';
+import { shuffled } from '@/lib/random';
 import { useApp } from '@/state/AppState';
 import { findDuplicates, MAX_PARTICIPANTS, parseNameList, SAMPLE_NAMES } from '@/lib/names';
 import { eligibleParticipants } from '@/lib/validation';
@@ -27,6 +31,7 @@ export function NamesConfig() {
   const { participants } = state;
   const [text, setText] = useState('');
   const [listOpen, setListOpen] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
   const ref = useRef<HTMLTextAreaElement>(null);
   const addNames = useAddNames();
   const pendingCount = useMemo(() => parseNameList(text).length, [text]);
@@ -118,7 +123,26 @@ export function NamesConfig() {
             <ChevronRight className="shrink-0 text-muted-foreground" />
           </Button>
         )}
-        <NamesOptions />
+        <div className="flex shrink-0 items-center gap-1">
+          {participants.length > 0 && (
+            <>
+              <QuickAction
+                label="Embaralhar"
+                disabled={locked || participants.length < 2}
+                onClick={() => {
+                  dispatch({ type: 'reorderParticipants', participants: shuffled(participants) });
+                  notify('Lista embaralhada. A ordem não muda as chances de ninguém.');
+                }}
+              >
+                <Shuffle />
+              </QuickAction>
+              <QuickAction label="Limpar lista" destructive disabled={locked} onClick={() => setConfirmClear(true)}>
+                <Trash2 />
+              </QuickAction>
+            </>
+          )}
+          <NamesOptions />
+        </div>
       </div>
 
       {showDuplicates && (
@@ -145,7 +169,46 @@ export function NamesConfig() {
       )}
 
       <ParticipantsSheet open={listOpen} onOpenChange={setListOpen} duplicateIds={duplicates.ids} />
+
+      <ConfirmDialog
+        open={confirmClear}
+        onOpenChange={setConfirmClear}
+        title="Limpar a lista?"
+        description={`${plural(participants.length, 'participante será removido', 'participantes serão removidos')}. O histórico continua salvo.`}
+        confirmLabel="Limpar lista"
+        onConfirm={() => {
+          dispatch({ type: 'clearParticipants' });
+          notify('Lista de participantes limpa.', 'success');
+        }}
+      />
     </div>
+  );
+}
+
+interface QuickActionProps {
+  label: string;
+  children: React.ReactNode;
+  disabled?: boolean;
+  destructive?: boolean;
+  onClick: () => void;
+}
+
+function QuickAction({ label, children, destructive, ...props }: QuickActionProps) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn('size-10 shrink-0 rounded-full text-muted-foreground', destructive && 'hover:bg-destructive/10 hover:text-destructive')}
+          aria-label={label}
+          {...props}
+        >
+          {children}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
   );
 }
 
