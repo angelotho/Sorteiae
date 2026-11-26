@@ -86,6 +86,10 @@ function Workspace() {
           <a href="#/termos" className="rounded-full px-3 py-2 transition-colors outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50">
             Termos de uso
           </a>
+          <span aria-hidden className="size-1 rounded-full bg-border" />
+          <span className="px-3 py-2 tabular-nums" title="Versão do Sorteiaê">
+            v{__APP_VERSION__}
+          </span>
         </nav>
       </footer>
     </main>
